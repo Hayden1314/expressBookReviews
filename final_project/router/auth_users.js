@@ -59,16 +59,41 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
  
     const isbn = req.params.isbn + "";
     const review = req.query.review;
-    const username = req.user.data;
+    const username = req.session.authorization .username;
     const book = books[isbn];
     if (book) {
         book.reviews[username] = review;
-        return res.status(200).json(book);
+        //return res.status(200).json(book);
+        return res.status(200).send("Successfully added review to ISBN " + isbn);
+
     }
     return res.status(404).json({ message: "Invalid ISBN" });
+});
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+ // Extract email parameter from request URL
+    
+ const isbn = req.params.isbn;
+ const username = req.session.authorization.username;
+ const book = books[isbn];
+
+
+ if (book) {
+     if (book.reviews.hasOwnProperty(username)) {
+        // Delete the user's review
+        delete book.reviews[username];
+        return res.status(200).send("Your review for ISBN " + isbn + " has been successfully deleted.");
+
+    }
+ }
+else {
+    return res.status(404).json({ message: "No review found for this user on the specified book." });
+}
 
 });
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
+
