@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
@@ -42,10 +43,24 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
- 
-    res.send(JSON.stringify({ books }, null, 4));
 
+
+public_users.get('/', function (req, res) {
+ 
+    let myPromise = new Promise((resolve, reject) => {
+        if (books) {
+          resolve(books);
+        } else {
+          reject('Cannot Find Books'); 
+        }
+      });
+      
+      myPromise.then((books) => { 
+        res.send(JSON.stringify({ books }, null, 4));
+    })
+        .catch((error) => {
+        res.status(404).send(error); 
+        });
 
 });
 
@@ -67,17 +82,35 @@ public_users.get('/isbn/:isbn',function (req, res) {
         res.status(404).send(error); 
         });
 
-
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
     const author = req.params.author;
-
     // Convert books object to an array of book entries
-    const filtered_books = Object.values(books).filter((book) => book.author === author);
 
-        res.send(filtered_books);
+    let myPromise = new Promise((resolve, reject) => {
+        // Convert books object to an array of book entries and filter by author
+        const filtered_books = Object.values(books).filter((book) => book.author === author);
+        
+        if (filtered_books.length) {
+            // If books are found by the author, resolve the promise
+            resolve(filtered_books);
+        } else {
+            // If no books are found, reject the promise
+            reject('No books found by this author');
+        }
+    });
+
+    myPromise.then((books) => {
+        // Send the filtered books as a response
+        res.send(books);
+    })
+    .catch((error) => {
+        // Handle any errors and send a 404 status with the error message
+        res.status(404).send(error);
+    });
+
    
 });
 
@@ -87,10 +120,30 @@ public_users.get('/title/:title',function (req, res) {
     const title = req.params.title;
 
     // Convert books object to an array of book entries
-    const filtered_titles = Object.values(books).filter((book) => book.title === title);
 
-  
-        res.send(filtered_titles);
+
+        let myPromise = new Promise((resolve, reject) => {
+        // Convert books object to an array of book entries and filter by author
+        const filtered_titles = Object.values(books).filter((book) => book.title === title);
+        
+        if (filtered_titles.length) {
+            // If books are found by the author, resolve the promise
+            resolve(filtered_titles);
+        } else {
+            // If no books are found, reject the promise
+            reject('No books found by this author');
+        }
+    });
+
+    myPromise.then((books) => {
+        // Send the filtered books as a response
+        res.send(books);
+    })
+    .catch((error) => {
+        // Handle any errors and send a 404 status with the error message
+        res.status(404).send(error);
+    });
+
 
 });
 
