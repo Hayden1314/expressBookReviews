@@ -43,15 +43,31 @@ public_users.post("/register", (req,res) => {
 
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
-  //Write your code here
-      res.send(JSON.stringify({books}, null, 4));
+ 
+    res.send(JSON.stringify({ books }, null, 4));
+
 
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
     const isbn = req.params.isbn;
-    res.send(books[isbn]);
+    let myPromise = new Promise((resolve, reject) => {
+        if (books[isbn]) {
+          resolve(books[isbn]);
+        } else {
+          reject('Book with this ISBN not found'); 
+        }
+      });
+      
+      myPromise.then((books) => { 
+        res.send(books);
+    })
+        .catch((error) => {
+        res.status(404).send(error); 
+        });
+
+
  });
   
 // Get book details based on author
@@ -61,7 +77,6 @@ public_users.get('/author/:author',function (req, res) {
     // Convert books object to an array of book entries
     const filtered_books = Object.values(books).filter((book) => book.author === author);
 
-  
         res.send(filtered_books);
    
 });
